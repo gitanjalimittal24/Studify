@@ -1,5 +1,4 @@
 # Studify
-# Studify
 
 ## 🔗 Project Links
 
