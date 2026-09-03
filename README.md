@@ -1,5 +1,39 @@
 # Studify
-Studify is a smart student study and document management platform designed to help students organize their complete academic life in one centralized and easy-to-use workspace. Students often receive study materials from different sources, including PDFs, assignments, notes, presentations, question papers, images, ZIP files, and other academic resources, which can become difficult to manage and find when needed. Studify addresses this problem by providing a structured system where students can organize their academic resources according to academic year, semester, and subject.
-The platform provides dedicated sections for managing files, subjects, tasks, deadlines, favorites, focus sessions, and academic statistics. Students can upload and categorize their study materials, search for resources using file names, subjects, teachers, tags, units, or file types, and quickly access recently used or favorited resources. The task and deadline management features help students keep track of assignments and important academic activities, while reminders help them stay aware of upcoming work.
-Studify also includes Focus Mode to support dedicated study sessions and a Statistics section that provides an overview of academic activity, including completed and pending tasks, files added, upcoming deadlines, focus sessions, and study progress. The application features a clean, student-friendly interface with responsive navigation and theme customization, making it convenient to use across different screen sizes.
-The goal of Studify is to reduce the clutter and stress caused by scattered academic resources and provide students with a single organized digital workspace for managing their study materials and academic responsibilities. Instead of searching through multiple folders, applications, chats, or devices, students can use Studify to keep their important academic resources, tasks, deadlines, and study activities organized in one place.
+# Studify
+
+## 🔗 Project Links
+
+### 🌐 Live Project
+
+[Open Studify](https://gitanjalimittal24.github.io/Studify/studify-app.html)
+
+### 🎥 Project Demo Video
+
+[Watch the Demo Video](https://drive.google.com/file/d/1C9vcVnBSpuWxH3fJjRUPVEM9QbS3rztx/view?usp=drivesdk)
+
+## 📌 About the Project
+
+Studify is a smart student study and document management platform designed to help students organize their complete academic life in one centralized workspace. It allows students to manage academic files, subjects, tasks, deadlines, favorites, focus sessions, and study progress in an organized and student-friendly environment.
+
+The platform is designed to reduce the clutter caused by study materials being scattered across different folders, applications, chats, and devices. Students can organize their resources by academic year, semester, and subject, making it easier to find and manage important study materials whenever they are needed.
+
+## ✨ Key Features
+
+* 📚 Academic Year & Semester Organization
+* 📁 Subject-wise File Management
+* 🔍 Global Search
+* 📝 Task Management
+* 📅 Deadline Tracking
+* ⭐ Favorite Files
+* 🎯 Focus Mode
+* 📊 Academic Statistics
+* 🔔 Reminders
+* 🌓 Theme Customization
+* 📱 Responsive Student-Friendly Interface
+
+## 🛠️ Project
+
+**Project Name:** Studify
+**Developer:** Gitanjali Mittal
+**Course:** B.Tech CSE — Artificial Intelligence & Machine Learning
+**Year:** 1st Year
