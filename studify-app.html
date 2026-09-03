@@ -1,0 +1,1274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Studify — Student Study Organizer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ============ TOKENS ============ */
+:root{
+  --bg:#FAFAF9; --surface:#FFFFFF; --surface-2:#F4F3F1; --border:#E7E5E1;
+  --text:#1C1C1E; --text-muted:#6B6B6B; --text-faint:#9C9C9C;
+  --accent:#4F46E5; --accent-soft:#EEF0FE; --accent-text:#FFFFFF;
+  --danger:#DC2626; --danger-soft:#FDECEC; --warn:#D97706; --warn-soft:#FDF3E3; --ok:#16A34A; --ok-soft:#EAF7EE;
+  --radius:10px; --radius-sm:6px; --shadow:0 1px 2px rgba(0,0,0,.04);
+  --sidebar-w:232px;
+}
+[data-theme="dark"]{
+  --bg:#141416; --surface:#1C1D20; --surface-2:#232427; --border:#2C2D30;
+  --text:#EDEDEE; --text-muted:#9B9BA1; --text-faint:#6E6E73;
+  --accent:#818CF8; --accent-soft:#262A47; --accent-text:#101014;
+  --danger:#F87171; --danger-soft:#3A2222; --warn:#FBBF24; --warn-soft:#3A2E14; --ok:#4ADE80; --ok-soft:#1C3324;
+  --shadow:0 1px 2px rgba(0,0,0,.3);
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  font-family:'Inter',system-ui,sans-serif; background:var(--bg); color:var(--text);
+  font-size:14px; line-height:1.5; -webkit-font-smoothing:antialiased;
+}
+button,input,select,textarea{font-family:inherit; font-size:inherit; color:inherit;}
+a{color:inherit;}
+h1,h2,h3,h4{margin:0; font-weight:700; letter-spacing:-0.01em;}
+::-webkit-scrollbar{width:8px;height:8px;}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:8px;}
+:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+
+/* ============ LAYOUT ============ */
+#app{display:flex; min-height:100vh;}
+.sidebar{
+  width:var(--sidebar-w); flex-shrink:0; background:var(--surface); border-right:1px solid var(--border);
+  display:flex; flex-direction:column; position:sticky; top:0; height:100vh;
+}
+.sidebar-brand{display:flex; align-items:center; gap:8px; padding:18px 20px 14px;}
+.brand-mark{width:26px;height:26px;border-radius:7px;background:var(--accent);display:flex;align-items:center;justify-content:center;color:var(--accent-text);font-weight:800;font-size:14px;}
+.brand-name{font-weight:700; font-size:15px;}
+.sidebar-nav{flex:1; padding:6px 10px; overflow-y:auto;}
+.nav-item{
+  display:flex; align-items:center; gap:10px; padding:9px 12px; border-radius:var(--radius-sm);
+  color:var(--text-muted); cursor:pointer; margin-bottom:2px; font-weight:500; font-size:13.5px; user-select:none;
+  border:none; background:none; width:100%; text-align:left;
+}
+.nav-item:hover{background:var(--surface-2); color:var(--text);}
+.nav-item.active{background:var(--accent-soft); color:var(--accent);}
+.nav-item .ico{width:17px;text-align:center;flex-shrink:0;}
+.sidebar-footer{padding:12px; border-top:1px solid var(--border);}
+.mini-user{display:flex; align-items:center; gap:8px; padding:6px; border-radius:var(--radius-sm); cursor:pointer;}
+.mini-user:hover{background:var(--surface-2);}
+.avatar{width:28px;height:28px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex-shrink:0;}
+.mini-user-name{font-weight:600; font-size:12.5px;}
+.mini-user-sub{font-size:11px; color:var(--text-faint);}
+
+.main{flex:1; min-width:0; display:flex; flex-direction:column;}
+.topbar{
+  position:sticky; top:0; z-index:20; background:var(--bg); border-bottom:1px solid var(--border);
+  display:flex; align-items:center; gap:12px; padding:12px 24px;
+}
+.search-wrap{flex:1; max-width:480px; position:relative;}
+.search-wrap input{
+  width:100%; padding:8px 12px 8px 34px; border-radius:var(--radius-sm); border:1px solid var(--border);
+  background:var(--surface); color:var(--text);
+}
+.search-wrap .ico{position:absolute; left:11px; top:50%; transform:translateY(-50%); color:var(--text-faint); font-size:13px;}
+.topbar-actions{display:flex; align-items:center; gap:8px; margin-left:auto;}
+.icon-btn{
+  width:34px;height:34px;border-radius:var(--radius-sm); border:1px solid var(--border); background:var(--surface);
+  display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--text-muted); position:relative;
+}
+.icon-btn:hover{color:var(--text); background:var(--surface-2);}
+.content{padding:24px; max-width:1080px; width:100%; margin:0 auto; flex:1;}
+.hide-mobile{}
+.mobile-nav{display:none;}
+
+@media (max-width:860px){
+  .sidebar{display:none;}
+  .mobile-nav{
+    display:flex; position:fixed; bottom:0; left:0; right:0; height:60px; background:var(--surface);
+    border-top:1px solid var(--border); z-index:30; justify-content:space-around; align-items:center;
+  }
+  .mobile-nav button{background:none;border:none;display:flex;flex-direction:column;align-items:center;gap:2px;color:var(--text-faint);font-size:10px;font-weight:600;flex:1;padding:6px 0;}
+  .mobile-nav button.active{color:var(--accent);}
+  .mobile-nav .ico{font-size:17px;}
+  body{padding-bottom:60px;}
+  .content{padding:16px;}
+  .topbar{padding:10px 14px;}
+  .search-wrap{max-width:none;}
+}
+
+/* ============ COMPONENTS ============ */
+.btn{
+  display:inline-flex; align-items:center; gap:6px; padding:8px 14px; border-radius:var(--radius-sm);
+  border:1px solid var(--border); background:var(--surface); cursor:pointer; font-weight:600; font-size:13px; color:var(--text);
+  white-space:nowrap;
+}
+.btn:hover{background:var(--surface-2);}
+.btn-primary{background:var(--accent); border-color:var(--accent); color:var(--accent-text);}
+.btn-primary:hover{filter:brightness(1.06);}
+.btn-danger{color:var(--danger);}
+.btn-sm{padding:5px 10px; font-size:12px;}
+.btn-ghost{border-color:transparent; background:none;}
+.btn-ghost:hover{background:var(--surface-2);}
+.btn-block{width:100%; justify-content:center;}
+
+.card{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow);}
+.card-pad{padding:16px;}
+.section-title{font-size:13px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:.04em; margin-bottom:10px;}
+.grid{display:grid; gap:14px;}
+.grid-2{grid-template-columns:1fr 1fr;}
+.grid-3{grid-template-columns:repeat(3,1fr);}
+.grid-4{grid-template-columns:repeat(4,1fr);}
+@media(max-width:760px){.grid-2,.grid-3,.grid-4{grid-template-columns:1fr;}}
+
+.badge{display:inline-flex; align-items:center; gap:4px; padding:2px 8px; border-radius:20px; font-size:11px; font-weight:600;}
+.badge-accent{background:var(--accent-soft); color:var(--accent);}
+.badge-danger{background:var(--danger-soft); color:var(--danger);}
+.badge-warn{background:var(--warn-soft); color:var(--warn);}
+.badge-ok{background:var(--ok-soft); color:var(--ok);}
+.badge-neutral{background:var(--surface-2); color:var(--text-muted);}
+.dot{width:7px;height:7px;border-radius:50%; display:inline-block;}
+
+.breadcrumb{display:flex; align-items:center; gap:6px; flex-wrap:wrap; font-size:13px; color:var(--text-muted); margin-bottom:16px;}
+.breadcrumb b{color:var(--text); cursor:pointer; font-weight:600;}
+.breadcrumb .crumb{cursor:pointer;}
+.breadcrumb .crumb:hover{color:var(--text); text-decoration:underline;}
+.breadcrumb .sep{color:var(--text-faint);}
+
+.empty-state{
+  text-align:center; padding:60px 20px; color:var(--text-muted);
+}
+.empty-state .big{font-size:28px; margin-bottom:10px;}
+.empty-state h3{font-size:15px; color:var(--text); margin-bottom:4px;}
+.empty-state p{font-size:13px; margin:0 0 16px;}
+
+.tabs{display:flex; gap:4px; border-bottom:1px solid var(--border); margin-bottom:16px; overflow-x:auto;}
+.tab{padding:9px 4px; margin-right:18px; border:none; background:none; color:var(--text-muted); font-weight:600; font-size:13px; cursor:pointer; border-bottom:2px solid transparent; white-space:nowrap;}
+.tab.active{color:var(--accent); border-bottom-color:var(--accent);}
+
+.file-row{display:flex; align-items:center; gap:12px; padding:11px 12px; border-radius:var(--radius-sm); cursor:pointer;}
+.file-row:hover{background:var(--surface-2);}
+.file-ico{width:34px;height:34px;border-radius:8px;background:var(--surface-2); display:flex;align-items:center;justify-content:center;font-size:15px; flex-shrink:0;}
+.file-meta{flex:1; min-width:0;}
+.file-name{font-weight:600; font-size:13.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+.file-sub{font-size:12px; color:var(--text-faint); margin-top:1px;}
+.file-actions{display:flex; gap:4px; opacity:0; transition:opacity .1s;}
+.file-row:hover .file-actions{opacity:1;}
+.tag-pill{background:var(--surface-2); color:var(--text-muted); font-size:11px; padding:2px 7px; border-radius:20px; font-weight:600;}
+
+.subject-card{padding:16px; border-radius:var(--radius); border:1px solid var(--border); background:var(--surface); cursor:pointer;}
+.subject-card:hover{border-color:var(--accent);}
+.subject-color{width:10px;height:10px;border-radius:3px; display:inline-block; margin-right:6px;}
+
+/* modal */
+.modal-overlay{position:fixed; inset:0; background:rgba(0,0,0,.4); display:flex; align-items:center; justify-content:center; z-index:100; padding:16px;}
+.modal{background:var(--surface); border-radius:var(--radius); width:100%; max-width:480px; max-height:88vh; overflow-y:auto; border:1px solid var(--border);}
+.modal-wide{max-width:640px;}
+.modal-header{display:flex; align-items:center; justify-content:space-between; padding:16px 18px; border-bottom:1px solid var(--border);}
+.modal-header h3{font-size:15px;}
+.modal-body{padding:18px;}
+.modal-footer{display:flex; justify-content:flex-end; gap:8px; padding:14px 18px; border-top:1px solid var(--border);}
+.field{margin-bottom:14px;}
+.field label{display:block; font-size:12.5px; font-weight:600; margin-bottom:5px; color:var(--text-muted);}
+.field input[type=text],.field input[type=number],.field input[type=date],.field input[type=time],.field select,.field textarea{
+  width:100%; padding:8px 10px; border-radius:var(--radius-sm); border:1px solid var(--border); background:var(--bg); color:var(--text);
+}
+.field textarea{resize:vertical; min-height:60px;}
+.field-row{display:flex; gap:10px;}
+.field-row .field{flex:1;}
+.dropzone{
+  border:2px dashed var(--border); border-radius:var(--radius); padding:26px; text-align:center; color:var(--text-muted); cursor:pointer;
+}
+.dropzone.drag{border-color:var(--accent); background:var(--accent-soft); color:var(--accent);}
+.pill-select{display:flex; gap:6px; flex-wrap:wrap;}
+.pill-opt{padding:6px 12px; border-radius:20px; border:1px solid var(--border); font-size:12.5px; font-weight:600; cursor:pointer; background:var(--surface);}
+.pill-opt.selected{background:var(--accent); border-color:var(--accent); color:var(--accent-text);}
+.step-indicator{display:flex; gap:4px; margin-bottom:16px;}
+.step-indicator div{height:3px; flex:1; border-radius:2px; background:var(--border);}
+.step-indicator div.done{background:var(--accent);}
+
+.progress-bar{height:6px; background:var(--surface-2); border-radius:4px; overflow:hidden; margin-top:6px;}
+.progress-bar > div{height:100%; background:var(--accent); transition:width .2s;}
+
+.task-row{display:flex; align-items:flex-start; gap:10px; padding:12px; border-radius:var(--radius-sm); border:1px solid var(--border); margin-bottom:8px; background:var(--surface);}
+.checkbox{width:18px;height:18px; border-radius:5px; border:1.5px solid var(--border); flex-shrink:0; cursor:pointer; display:flex; align-items:center; justify-content:center; margin-top:1px;}
+.checkbox.checked{background:var(--accent); border-color:var(--accent); color:var(--accent-text); font-size:11px;}
+.task-title{font-weight:600; font-size:13.5px;}
+.task-title.done{text-decoration:line-through; color:var(--text-faint);}
+.task-tags{display:flex; gap:6px; margin-top:5px; flex-wrap:wrap; align-items:center;}
+
+.focus-shell{display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:70vh; text-align:center;}
+.focus-timer{font-size:72px; font-weight:800; letter-spacing:-0.02em; margin:24px 0; font-variant-numeric:tabular-nums;}
+.preset-row{display:flex; gap:8px; margin-top:6px;}
+
+.calendar-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:4px;}
+.cal-day{min-height:64px; border:1px solid var(--border); border-radius:8px; padding:5px; font-size:11px; color:var(--text-faint); position:relative; cursor:pointer;}
+.cal-day.today{border-color:var(--accent);}
+.cal-day .num{font-weight:700; color:var(--text);}
+.cal-day .dots{display:flex; gap:2px; margin-top:3px; flex-wrap:wrap;}
+.cal-dowrow{display:grid; grid-template-columns:repeat(7,1fr); gap:4px; margin-bottom:6px; font-size:11px; font-weight:700; color:var(--text-faint); text-align:center;}
+
+.toast-wrap{position:fixed; bottom:20px; right:20px; z-index:200; display:flex; flex-direction:column; gap:8px;}
+.toast{background:var(--surface); border:1px solid var(--border); box-shadow:0 4px 16px rgba(0,0,0,.12); border-radius:var(--radius-sm); padding:11px 14px; font-size:13px; font-weight:500; min-width:220px;}
+.toast.success{border-left:3px solid var(--ok);}
+.toast.error{border-left:3px solid var(--danger);}
+
+.stat-num{font-size:26px; font-weight:800;}
+.stat-label{font-size:12px; color:var(--text-muted); margin-top:2px;}
+.bar-row{display:flex; align-items:center; gap:10px; margin-bottom:9px;}
+.bar-row .lbl{width:100px; font-size:12px; color:var(--text-muted); flex-shrink:0;}
+.bar-track{flex:1; height:8px; background:var(--surface-2); border-radius:4px; overflow:hidden;}
+.bar-fill{height:100%; background:var(--accent); border-radius:4px;}
+.bar-val{font-size:12px; font-weight:700; width:26px; text-align:right;}
+
+.subtitle{color:var(--text-muted); font-size:13px; margin-top:2px;}
+.flex-between{display:flex; align-items:center; justify-content:space-between; gap:12px;}
+.mt24{margin-top:24px;} .mb16{margin-bottom:16px;}
+.text-muted{color:var(--text-muted);}
+.dropdown{position:absolute; top:110%; right:0; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); box-shadow:0 6px 20px rgba(0,0,0,.12); min-width:170px; z-index:50; padding:4px;}
+.dropdown button{display:flex; align-items:center; gap:8px; width:100%; text-align:left; padding:8px 10px; border:none; background:none; border-radius:6px; cursor:pointer; font-size:13px; color:var(--text);}
+.dropdown button:hover{background:var(--surface-2);}
+.relative{position:relative;}
+</style>
+</head>
+<body data-theme="light">
+<div id="app"></div>
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script>
+/* =========================================================================
+   STUDIFY — Student Study Organizer
+   Fully working client-side app. Data persists via window.storage (per-user,
+   private). Data model intentionally mirrors the production Postgres schema
+   (see /backend/schema.sql) so this can be swapped for real Supabase calls
+   without changing the UI layer — see lib/api.* comments below.
+   ========================================================================= */
+
+const DEFAULT_CATEGORIES = ['Notes','Assignments','Question Papers','PYQs','Lectures','Other'];
+const FILE_TYPE_ICONS = {pdf:'📕',doc:'📘',docx:'📘',ppt:'📙',pptx:'📙',xls:'📗',xlsx:'📗',
+  png:'🖼️',jpg:'🖼️',jpeg:'🖼️',webp:'🖼️',zip:'🗜️',txt:'📄',csv:'📊',other:'📎'};
+const SUBJECT_COLORS = ['#4F46E5','#0EA5E9','#F59E0B','#EC4899','#10B981','#8B5CF6','#EF4444','#14B8A6'];
+const uid = () => Math.random().toString(36).slice(2,10)+Date.now().toString(36).slice(-4);
+const nowISO = () => new Date().toISOString();
+const todayStr = () => new Date().toISOString().slice(0,10);
+
+/* ---------------- STATE ---------------- */
+let DB = {
+  user:{name:'Student', email:'you@studify.app'},
+  years:[], semesters:[], subjects:[], files:[], tasks:[], deadlines:[], focusSessions:[],
+  ui:{ currentYearId:null, currentSemesterId:null, theme:'light' }
+};
+let route = 'dashboard';
+let fileBrowse = { yearId:null, semesterId:null, subjectId:null, category:null };
+let searchQuery = '';
+let taskTab = 'today';
+let calMonthOffset = 0;
+let focusState = { running:false, paused:false, remaining:25*60, total:25*60, subjectId:null, taskId:null, label:'Free study', timerId:null };
+let editingFileId = null;
+let uploadStep = 1;
+let uploadDraft = { files:[], yearId:null, semesterId:null, subjectId:null, category:null, tags:[], teacher:'', description:'', unit:'', deadline:'' };
+
+/* ---------------- PERSISTENCE ---------------- */
+let saveTimer = null;
+function save(){
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(async ()=>{
+    try{ await window.storage.set('studify-db', JSON.stringify(DB), false); }
+    catch(e){ console.error('save failed', e); toast('Could not save changes','error'); }
+  }, 250);
+}
+async function load(){
+  try{
+    const res = await window.storage.get('studify-db', false);
+    if(res && res.value){ DB = Object.assign(DB, JSON.parse(res.value)); }
+    else { seedDemoData(); save(); }
+  }catch(e){ seedDemoData(); }
+}
+function seedDemoData(){
+  const yId = uid(), sId = uid();
+  DB.years = [{id:yId, name:'2026–27', startYear:2026, endYear:2027}];
+  DB.semesters = [{id:sId, yearId:yId, name:'Semester 1', number:1}];
+  const subs = [['Mathematics','MATH101'],['Programming','CS102'],['Physics','PHY101'],['AI Fundamentals','AI201'],['Communication Skills','COM101']];
+  DB.subjects = subs.map((s,i)=>({id:uid(), semesterId:sId, name:s[0], code:s[1], color:SUBJECT_COLORS[i%SUBJECT_COLORS.length], categories:[...DEFAULT_CATEGORIES]}));
+  const [math, prog, phy] = DB.subjects;
+  DB.files = [
+    {id:uid(), subjectId:prog.id, category:'Assignments', name:'Unit 2 Arrays Assignment.pdf', type:'pdf', size:284000, uploadedAt:nowISO(), lastOpenedAt:null, isFavorite:true, tags:['#unit2','#important'], teacher:'Dr. Rao', description:'Cover arrays & pointers', unit:'Unit 2', deadline:'', dataUrl:null},
+    {id:uid(), subjectId:math.id, category:'Notes', name:'Calculus Unit 1 Notes.pdf', type:'pdf', size:512000, uploadedAt:nowISO(), lastOpenedAt:nowISO(), isFavorite:true, tags:['#exam'], teacher:'Prof. Iyer', description:'', unit:'Unit 1', deadline:'', dataUrl:null},
+    {id:uid(), subjectId:phy.id, category:'Lectures', name:'Lecture Diagram.png', type:'png', size:98000, uploadedAt:nowISO(), lastOpenedAt:null, isFavorite:false, tags:['#lab'], teacher:'', description:'', unit:'', deadline:'', dataUrl:null},
+  ];
+  DB.tasks = [
+    {id:uid(), title:'Complete Mathematics Assignment', description:'', subjectId:math.id, priority:'high', status:'todo', dueDate:todayStr(), dueTime:'18:00', reminderMinutes:60, recurring:'none', createdAt:nowISO(), completedAt:null},
+    {id:uid(), title:'Study Unit 2 — Arrays', description:'', subjectId:prog.id, priority:'medium', status:'in_progress', dueDate:addDays(1), dueTime:'', reminderMinutes:1440, recurring:'none', createdAt:nowISO(), completedAt:null},
+    {id:uid(), title:'Read Physics Notes', description:'', subjectId:phy.id, priority:'low', status:'todo', dueDate:addDays(3), dueTime:'', reminderMinutes:0, recurring:'none', createdAt:nowISO(), completedAt:null},
+  ];
+  DB.deadlines = [
+    {id:uid(), title:'Programming Lab Submission', description:'', subjectId:prog.id, type:'Lab', date:addDays(3), time:'23:59', completed:false},
+    {id:uid(), title:'Physics Quiz', description:'', subjectId:phy.id, type:'Quiz', date:addDays(5), time:'10:00', completed:false},
+    {id:uid(), title:'Math Assignment Due', description:'', subjectId:math.id, type:'Assignment', date:todayStr(), time:'23:59', completed:false},
+  ];
+  DB.ui.currentYearId = yId; DB.ui.currentSemesterId = sId;
+}
+function addDays(n){ const d=new Date(); d.setDate(d.getDate()+n); return d.toISOString().slice(0,10); }
+
+/* ---------------- HELPERS ---------------- */
+function fmtSize(b){ if(b<1024) return b+' B'; if(b<1048576) return (b/1024).toFixed(1)+' KB'; return (b/1048576).toFixed(1)+' MB'; }
+function fmtDate(iso){ if(!iso) return '—'; const d=new Date(iso); return d.toLocaleDateString(undefined,{month:'short',day:'numeric', year: d.getFullYear()!==new Date().getFullYear()?'numeric':undefined}); }
+function fmtDateTime(iso){ if(!iso) return '—'; const d=new Date(iso); return d.toLocaleString(undefined,{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}); }
+function extOf(name){ const p=name.split('.'); return p.length>1? p.pop().toLowerCase() : 'other'; }
+function iconFor(type){ return FILE_TYPE_ICONS[type] || FILE_TYPE_ICONS.other; }
+function subjectById(id){ return DB.subjects.find(s=>s.id===id); }
+function semesterById(id){ return DB.semesters.find(s=>s.id===id); }
+function yearById(id){ return DB.years.find(y=>y.id===id); }
+function subjectsForSemester(semId){ return DB.subjects.filter(s=>s.semesterId===semId); }
+function semestersForYear(yId){ return DB.semesters.filter(s=>s.yearId===yId); }
+function daysUntil(dateStr){ if(!dateStr) return null; const d1=new Date(todayStr()), d2=new Date(dateStr); return Math.round((d2-d1)/86400000); }
+function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function toast(msg, type='success'){
+  const el = document.createElement('div');
+  el.className = 'toast '+type;
+  el.textContent = msg;
+  document.getElementById('toastWrap').appendChild(el);
+  setTimeout(()=>el.remove(), 3200);
+}
+function closeAllDropdowns(){ document.querySelectorAll('.dropdown').forEach(d=>d.remove()); }
+document.addEventListener('click', (e)=>{ if(!e.target.closest('.dd-trigger')) closeAllDropdowns(); });
+
+/* ---------------- ROUTER ---------------- */
+function go(r){ route = r; closeAllDropdowns(); render(); window.scrollTo(0,0); }
+window.go = go;
+
+/* ---------------- RENDER SHELL ---------------- */
+function render(){
+  document.body.setAttribute('data-theme', DB.ui.theme);
+  const app = document.getElementById('app');
+  const navItems = [
+    ['dashboard','⌂','Dashboard'], ['subjects','📚','My Subjects'], ['files','🗂️','Files'],
+    ['tasks','✓','Tasks'], ['deadlines','⏰','Deadlines'], ['favorites','⭐','Favorites'],
+    ['focus','◔','Focus Mode'], ['stats','📈','Statistics'], ['settings','⚙','Settings']
+  ];
+  app.innerHTML = `
+    <div class="sidebar">
+      <div class="sidebar-brand"><div class="brand-mark">S</div><div class="brand-name">Studify</div></div>
+      <div class="sidebar-nav">
+        ${navItems.map(([r,ic,label])=>`<button class="nav-item ${route===r?'active':''}" onclick="go('${r}')"><span class="ico">${ic}</span>${label}</button>`).join('')}
+      </div>
+      <div class="sidebar-footer">
+        <div class="mini-user" onclick="go('settings')">
+          <div class="avatar">${DB.user.name.slice(0,1).toUpperCase()}</div>
+          <div><div class="mini-user-name">${escapeHtml(DB.user.name)}</div><div class="mini-user-sub">${escapeHtml(DB.user.email)}</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="main">
+      <div class="topbar">
+        <div class="search-wrap">
+          <span class="ico">🔍</span>
+          <input id="globalSearch" placeholder="Search files, subjects, tags, teachers…" value="${escapeHtml(searchQuery)}" oninput="onSearchInput(this.value)">
+        </div>
+        <div class="topbar-actions">
+          <div class="relative">
+            <button class="icon-btn dd-trigger" onclick="event.stopPropagation(); openQuickAdd(this)">＋</button>
+          </div>
+          <button class="icon-btn" onclick="toggleTheme()">${DB.ui.theme==='light'?'🌙':'☀️'}</button>
+          <button class="icon-btn" title="Notifications" onclick="toast('No new notifications')">🔔</button>
+        </div>
+      </div>
+      <div class="content" id="content"></div>
+    </div>
+    <div class="mobile-nav">
+      ${['dashboard','⌂','Home','files','🗂️','Files','tasks','✓','Tasks','deadlines','⏰','Due','focus','◔','Focus'].reduce((acc,v,i,arr)=>{ if(i%3===0) acc.push(arr.slice(i,i+3)); return acc; },[]).map(([r,ic,label])=>`<button class="${route===r?'active':''}" onclick="go('${r}')"><div class="ico">${ic}</div>${label}</button>`).join('')}
+    </div>
+  `;
+  renderContent();
+}
+
+function onSearchInput(v){ searchQuery = v; if(searchQuery.trim()){ route='files'; fileBrowse={yearId:null,semesterId:null,subjectId:null,category:null}; } renderContent(); }
+
+function openQuickAdd(btn){
+  closeAllDropdowns();
+  const dd = document.createElement('div');
+  dd.className='dropdown'; dd.style.position='fixed';
+  const r = btn.getBoundingClientRect();
+  dd.style.top = (r.bottom+6)+'px'; dd.style.right = (window.innerWidth-r.right)+'px';
+  dd.innerHTML = `
+    <button onclick="openUploadModal()">📤 Upload File</button>
+    <button onclick="openTaskModal()">✓ Add Task</button>
+    <button onclick="openDeadlineModal()">⏰ Add Deadline</button>
+    <button onclick="openSubjectModal()">📚 Add Subject</button>
+    <button onclick="go('focus')">◔ Start Focus</button>
+  `;
+  document.body.appendChild(dd);
+}
+
+function toggleTheme(){ DB.ui.theme = DB.ui.theme==='light'?'dark':'light'; save(); render(); }
+
+/* ================= CONTENT ROUTER ================= */
+function renderContent(){
+  const c = document.getElementById('content');
+  if(!c) return;
+  if(searchQuery.trim()){ c.innerHTML = renderSearchResults(); return; }
+  const map = {dashboard:renderDashboard, subjects:renderSubjects, files:renderFiles, tasks:renderTasks,
+    deadlines:renderDeadlines, favorites:renderFavorites, focus:renderFocus, stats:renderStats, settings:renderSettings};
+  c.innerHTML = (map[route]||renderDashboard)();
+  if(route==='focus') initFocusUI();
+}
+
+/* ================= SEARCH ================= */
+function renderSearchResults(){
+  const q = searchQuery.toLowerCase();
+  const results = DB.files.filter(f=>{
+    const subj = subjectById(f.subjectId);
+    const hay = [f.name, f.category, f.teacher, f.unit, f.type, subj?subj.name:'', ...(f.tags||[])].join(' ').toLowerCase();
+    return hay.includes(q);
+  });
+  const filterChips = ['All','PDF','Images','Documents','Assignments','Notes','PYQs','Presentations','ZIP'];
+  return `
+    <h2>Search results for "${escapeHtml(searchQuery)}"</h2>
+    <div class="subtitle mb16">${results.length} file${results.length!==1?'s':''} found</div>
+    <div class="pill-select mb16">${filterChips.map(ch=>`<div class="pill-opt" onclick="toast('Filter: ${ch}')">${ch}</div>`).join('')}</div>
+    ${results.length? `<div class="card card-pad">${results.map(f=>fileRowHtml(f)).join('')}</div>`
+      : emptyState('🔎','No matches found','Try a different keyword — search covers file names, subjects, tags, teachers and categories.')}
+    <div class="mt24"><button class="btn" onclick="searchQuery='';renderShellSearch();">← Clear search</button></div>
+  `;
+}
+function renderShellSearch(){ document.getElementById('globalSearch').value=''; render(); }
+
+/* ================= DASHBOARD ================= */
+function renderDashboard(){
+  const hour = new Date().getHours();
+  const greeting = hour<12?'Good morning':hour<17?'Good afternoon':'Good evening';
+  const currentSem = DB.ui.currentSemesterId ? semesterById(DB.ui.currentSemesterId) : DB.semesters[0];
+  const currentYear = currentSem ? yearById(currentSem.yearId) : DB.years[0];
+  const subs = currentSem ? subjectsForSemester(currentSem.id) : [];
+  const upcoming = [...DB.deadlines].filter(d=>!d.completed).sort((a,b)=>a.date.localeCompare(b.date)).slice(0,4);
+  const recentFiles = [...DB.files].sort((a,b)=>new Date(b.uploadedAt)-new Date(a.uploadedAt)).slice(0,5);
+  const recentOpened = [...DB.files].filter(f=>f.lastOpenedAt).sort((a,b)=>new Date(b.lastOpenedAt)-new Date(a.lastOpenedAt)).slice(0,4);
+  const favs = DB.files.filter(f=>f.isFavorite).slice(0,4);
+  const todaysTasks = DB.tasks.filter(t=>t.dueDate===todayStr() && t.status!=='completed');
+  const pendingCount = DB.tasks.filter(t=>t.status!=='completed').length;
+
+  return `
+    <h2>${greeting}, ${escapeHtml(DB.user.name)} 👋</h2>
+    <div class="subtitle mb16">${currentYear?currentYear.name:'—'} · ${currentSem?currentSem.name:'—'}</div>
+
+    <div class="grid" style="grid-template-columns:repeat(5,1fr); margin-bottom:20px;">
+      ${[['📤','Upload File','openUploadModal()'],['✓','Add Task','openTaskModal()'],['⏰','Add Deadline','openDeadlineModal()'],['📚','Add Subject','openSubjectModal()'],['◔','Start Focus',"go('focus')"]]
+        .map(([ic,label,fn])=>`<button class="btn btn-block" style="flex-direction:column; height:64px; gap:4px;" onclick="${fn}"><span style="font-size:17px;">${ic}</span><span style="font-size:11.5px;">${label}</span></button>`).join('')}
+    </div>
+
+    <div class="section-title">Subjects this semester</div>
+    <div class="grid grid-4 mb16">
+      ${subs.length? subs.map(s=>`
+        <div class="subject-card" onclick="fileBrowse={yearId:'${currentYear?currentYear.id:''}',semesterId:'${currentSem.id}',subjectId:'${s.id}',category:null}; go('files')">
+          <span class="subject-color" style="background:${s.color}"></span><b>${escapeHtml(s.name)}</b>
+          <div class="subtitle">${DB.files.filter(f=>f.subjectId===s.id).length} files</div>
+        </div>`).join('') : `<div class="card card-pad text-muted">No subjects yet. <a href="#" onclick="openSubjectModal();return false;">Add one →</a></div>`}
+    </div>
+
+    <div class="grid grid-2">
+      <div>
+        <div class="flex-between"><div class="section-title" style="margin-bottom:0">Upcoming</div><a href="#" onclick="go('deadlines');return false;" style="font-size:12px;font-weight:600;">View all</a></div>
+        <div class="card card-pad mt24" style="margin-top:8px;">
+          ${upcoming.length? upcoming.map(d=>{
+            const du = daysUntil(d.date); const label = du<0?'Overdue':du===0?'Today':du===1?'Tomorrow':fmtDate(d.date);
+            const cls = du<0?'badge-danger':du===0?'badge-warn':'badge-neutral';
+            return `<div class="flex-between" style="padding:9px 0; border-bottom:1px solid var(--border);">
+              <div><b style="font-size:13px;">${escapeHtml(d.title)}</b><div class="subtitle">${subjectById(d.subjectId)?.name||''}</div></div>
+              <span class="badge ${cls}">${label}</span></div>`;
+          }).join('') : `<div class="text-muted" style="padding:10px 0;">Nothing on the horizon 🎉</div>`}
+        </div>
+        <div class="section-title mt24">Today's tasks</div>
+        <div class="card card-pad" style="margin-top:8px;">
+          ${todaysTasks.length? todaysTasks.map(t=>taskRowHtml(t)).join('') : `<div class="text-muted" style="padding:10px 0;">No tasks due today.</div>`}
+        </div>
+      </div>
+      <div>
+        <div class="flex-between"><div class="section-title" style="margin-bottom:0">Recently added</div><a href="#" onclick="go('files');return false;" style="font-size:12px;font-weight:600;">View all</a></div>
+        <div class="card card-pad" style="margin-top:8px; margin-bottom:20px;">
+          ${recentFiles.length? recentFiles.map(f=>fileRowHtml(f,true)).join('') : `<div class="text-muted" style="padding:10px 0;">No files yet.</div>`}
+        </div>
+        <div class="flex-between"><div class="section-title" style="margin-bottom:0">Favorites</div><a href="#" onclick="go('favorites');return false;" style="font-size:12px;font-weight:600;">View all</a></div>
+        <div class="card card-pad" style="margin-top:8px;">
+          ${favs.length? favs.map(f=>fileRowHtml(f,true)).join('') : `<div class="text-muted" style="padding:10px 0;">Star files to find them here.</div>`}
+        </div>
+      </div>
+    </div>
+  `;
+}
+function emptyState(icon,title,desc,cta){
+  return `<div class="empty-state"><div class="big">${icon}</div><h3>${title}</h3><p>${desc}</p>${cta||''}</div>`;
+}
+
+/* ================= SUBJECTS / YEARS / SEMESTERS ================= */
+function renderSubjects(){
+  return `
+    <div class="flex-between mb16">
+      <h2>My Subjects</h2>
+      <div style="display:flex; gap:8px;">
+        <button class="btn" onclick="openYearModal()">＋ Academic Year</button>
+        <button class="btn" onclick="openSemesterModal()">＋ Semester</button>
+        <button class="btn btn-primary" onclick="openSubjectModal()">＋ Subject</button>
+      </div>
+    </div>
+    ${DB.years.length===0? emptyState('📚','No academic years yet','Create your first academic year to start organizing subjects.', `<button class="btn btn-primary" onclick="openYearModal()">+ Add Academic Year</button>`) : ''}
+    ${DB.years.map(y=>`
+      <div class="card card-pad mb16">
+        <div class="flex-between">
+          <h3>${escapeHtml(y.name)}</h3>
+          <button class="btn btn-sm btn-ghost" onclick="openSemesterModal('${y.id}')">＋ Semester</button>
+        </div>
+        ${semestersForYear(y.id).length===0? `<div class="text-muted" style="padding:12px 0;">No semesters yet in this year.</div>` : semestersForYear(y.id).map(sem=>`
+          <div style="margin-top:14px; padding-top:14px; border-top:1px solid var(--border);">
+            <div class="flex-between" style="margin-bottom:10px;">
+              <b style="font-size:13.5px;">${escapeHtml(sem.name)}</b>
+              <button class="btn btn-sm btn-ghost" onclick="openSubjectModal('${sem.id}')">＋ Subject</button>
+            </div>
+            <div class="grid grid-4">
+              ${subjectsForSemester(sem.id).map(s=>`
+                <div class="subject-card" onclick="fileBrowse={yearId:'${y.id}',semesterId:'${sem.id}',subjectId:'${s.id}',category:null}; go('files')">
+                  <div class="flex-between"><span><span class="subject-color" style="background:${s.color}"></span><b>${escapeHtml(s.name)}</b></span>
+                  <span class="dd-trigger" style="cursor:pointer;" onclick="event.stopPropagation(); openSubjectMenu(this,'${s.id}')">⋯</span></div>
+                  <div class="subtitle">${s.code||''}</div>
+                  <div class="subtitle">${DB.files.filter(f=>f.subjectId===s.id).length} files</div>
+                </div>`).join('') || `<div class="text-muted" style="grid-column:1/-1;">No subjects yet.</div>`}
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `).join('')}
+  `;
+}
+function openSubjectMenu(btn, subjectId){
+  closeAllDropdowns();
+  const dd=document.createElement('div'); dd.className='dropdown'; dd.style.position='fixed';
+  const r=btn.getBoundingClientRect(); dd.style.top=(r.bottom+4)+'px'; dd.style.right=(window.innerWidth-r.right)+'px';
+  dd.innerHTML=`<button onclick="renameSubject('${subjectId}')">✏️ Rename</button><button onclick="manageCategoriesModal('${subjectId}')">🗂️ Manage categories</button><button class="btn-danger" onclick="deleteSubject('${subjectId}')" style="color:var(--danger)">🗑️ Delete</button>`;
+  document.body.appendChild(dd);
+}
+function renameSubject(id){
+  const s = subjectById(id); const name = prompt('Rename subject', s.name);
+  if(name){ s.name=name; save(); render(); toast('Subject renamed'); }
+}
+function deleteSubject(id){
+  if(!confirm('Delete this subject and unlink its files? Files themselves are kept.')) return;
+  DB.subjects = DB.subjects.filter(s=>s.id!==id);
+  save(); render(); toast('Subject deleted');
+}
+function manageCategoriesModal(subjectId){
+  const s = subjectById(subjectId);
+  openModal(`Categories — ${escapeHtml(s.name)}`, `
+    <div id="catList">${s.categories.map((c,i)=>`<div class="flex-between" style="padding:6px 0;"><span>${escapeHtml(c)}</span><button class="btn btn-sm btn-ghost" onclick="removeCategory('${subjectId}',${i})">Remove</button></div>`).join('')}</div>
+    <div class="field mt24"><label>New category</label><div style="display:flex; gap:8px;"><input type="text" id="newCat" placeholder="e.g. Lab Manuals"><button class="btn" onclick="addCategory('${subjectId}')">Add</button></div></div>
+  `, []);
+}
+function addCategory(subjectId){
+  const v = document.getElementById('newCat').value.trim();
+  if(!v) return;
+  const s = subjectById(subjectId); s.categories.push(v); save();
+  manageCategoriesModal(subjectId);
+}
+function removeCategory(subjectId,i){
+  const s = subjectById(subjectId); s.categories.splice(i,1); save(); manageCategoriesModal(subjectId);
+}
+
+function openYearModal(){
+  openModal('Add Academic Year', `
+    <div class="field"><label>Year name</label><input type="text" id="yName" placeholder="e.g. 2026–27"></div>
+    <div class="field-row">
+      <div class="field"><label>Start year</label><input type="number" id="yStart" placeholder="2026"></div>
+      <div class="field"><label>End year</label><input type="number" id="yEnd" placeholder="2027"></div>
+    </div>
+  `, [{label:'Create', primary:true, onClick:()=>{
+    const name = document.getElementById('yName').value.trim() || 'New Academic Year';
+    const start = +document.getElementById('yStart').value || new Date().getFullYear();
+    const end = +document.getElementById('yEnd').value || start+1;
+    const id = uid();
+    DB.years.push({id,name,startYear:start,endYear:end});
+    DB.ui.currentYearId = DB.ui.currentYearId || id;
+    save(); closeModal(); go('subjects'); toast('Academic year created');
+  }}]);
+}
+function openSemesterModal(prefYearId){
+  if(DB.years.length===0){ toast('Create an academic year first','error'); return; }
+  openModal('Add Semester', `
+    <div class="field"><label>Academic Year</label><select id="semYear">${DB.years.map(y=>`<option value="${y.id}" ${y.id===prefYearId?'selected':''}>${escapeHtml(y.name)}</option>`).join('')}</select></div>
+    <div class="field"><label>Semester name</label><input type="text" id="semName" placeholder="e.g. Semester 1"></div>
+    <div class="field"><label>Number</label><input type="number" id="semNum" placeholder="1"></div>
+  `, [{label:'Create', primary:true, onClick:()=>{
+    const yearId = document.getElementById('semYear').value;
+    const name = document.getElementById('semName').value.trim() || 'New Semester';
+    const number = +document.getElementById('semNum').value || (semestersForYear(yearId).length+1);
+    const id = uid();
+    DB.semesters.push({id, yearId, name, number});
+    DB.ui.currentSemesterId = DB.ui.currentSemesterId || id;
+    save(); closeModal(); go('subjects'); toast('Semester created');
+  }}]);
+}
+function openSubjectModal(prefSemId){
+  if(DB.semesters.length===0){ toast('Create a semester first','error'); return; }
+  openModal('Add Subject', `
+    <div class="field"><label>Semester</label><select id="subjSem">${DB.semesters.map(s=>`<option value="${s.id}" ${s.id===prefSemId?'selected':''}>${escapeHtml(yearById(s.yearId)?.name||'')} — ${escapeHtml(s.name)}</option>`).join('')}</select></div>
+    <div class="field"><label>Subject name</label><input type="text" id="subjName" placeholder="e.g. Programming"></div>
+    <div class="field"><label>Code (optional)</label><input type="text" id="subjCode" placeholder="e.g. CS102"></div>
+    <div class="field"><label>Color</label><div class="pill-select">${SUBJECT_COLORS.map((c,i)=>`<div class="pill-opt ${i===0?'selected':''}" data-color="${c}" style="background:${c}; width:26px; height:26px; padding:0; border-radius:50%;" onclick="selectColor(this)"></div>`).join('')}</div></div>
+  `, [{label:'Create', primary:true, onClick:()=>{
+    const semesterId = document.getElementById('subjSem').value;
+    const name = document.getElementById('subjName').value.trim();
+    if(!name){ toast('Subject name is required','error'); return; }
+    const code = document.getElementById('subjCode').value.trim();
+    const colorEl = document.querySelector('.pill-opt.selected[data-color]');
+    const color = colorEl? colorEl.dataset.color : SUBJECT_COLORS[0];
+    DB.subjects.push({id:uid(), semesterId, name, code, color, categories:[...DEFAULT_CATEGORIES]});
+    save(); closeModal(); go('subjects'); toast('Subject added');
+  }}]);
+}
+function selectColor(el){ document.querySelectorAll('.pill-opt[data-color]').forEach(e=>e.classList.remove('selected')); el.classList.add('selected'); }
+
+/* ================= FILES ================= */
+function renderFiles(){
+  let list = DB.files;
+  const {yearId,semesterId,subjectId,category} = fileBrowse;
+  if(subjectId) list = list.filter(f=>f.subjectId===subjectId);
+  else if(semesterId) list = list.filter(f=>{ const s=subjectById(f.subjectId); return s && s.semesterId===semesterId; });
+  else if(yearId) list = list.filter(f=>{ const s=subjectById(f.subjectId); const sem=s&&semesterById(s.semesterId); return sem && sem.yearId===yearId; });
+  if(category) list = list.filter(f=>f.category===category);
+
+  let crumbs = `<span class="crumb" onclick="fileBrowse={yearId:null,semesterId:null,subjectId:null,category:null};renderContent();">All Files</span>`;
+  if(yearId){ crumbs += ` <span class="sep">/</span> <span class="crumb" onclick="fileBrowse.semesterId=null;fileBrowse.subjectId=null;fileBrowse.category=null;renderContent();">${escapeHtml(yearById(yearId)?.name||'')}</span>`; }
+  if(semesterId){ crumbs += ` <span class="sep">/</span> <span class="crumb" onclick="fileBrowse.subjectId=null;fileBrowse.category=null;renderContent();">${escapeHtml(semesterById(semesterId)?.name||'')}</span>`; }
+  if(subjectId){ crumbs += ` <span class="sep">/</span> <span class="crumb" onclick="fileBrowse.category=null;renderContent();">${escapeHtml(subjectById(subjectId)?.name||'')}</span>`; }
+  if(category){ crumbs += ` <span class="sep">/</span> <b>${escapeHtml(category)}</b>`; }
+
+  const subj = subjectId ? subjectById(subjectId) : null;
+
+  // If we're at a subject with no category chosen: show category folders
+  let body = '';
+  if(subj && !category){
+    body = `<div class="grid grid-4 mb16">${subj.categories.map(c=>{
+      const count = DB.files.filter(f=>f.subjectId===subj.id && f.category===c).length;
+      return `<div class="subject-card" onclick="fileBrowse.category='${c}'; renderContent();">📁 <b>${escapeHtml(c)}</b><div class="subtitle">${count} file${count!==1?'s':''}</div></div>`;
+    }).join('')}</div>`;
+  }
+  // if no year/sem/subject selected, show quick tree
+  if(!yearId && !semesterId && !subjectId){
+    body += `<div class="grid grid-4 mb16">${DB.subjects.map(s=>{
+      const count = DB.files.filter(f=>f.subjectId===s.id).length;
+      return `<div class="subject-card" onclick="fileBrowse={yearId:semesterById(s.semesterId)?.yearId,semesterId:s.semesterId,subjectId:s.id,category:null};renderContent();">
+        <span class="subject-color" style="background:${s.color}"></span><b>${escapeHtml(s.name)}</b><div class="subtitle">${count} files</div></div>`;
+    }).join('')}</div>`;
+  }
+
+  const sortedList = [...list].sort((a,b)=>new Date(b.uploadedAt)-new Date(a.uploadedAt));
+
+  return `
+    <div class="flex-between mb16">
+      <h2>Files</h2>
+      <div style="display:flex; gap:8px;">
+        <select onchange="sortFiles(this.value)" style="padding:7px 10px; border-radius:6px; border:1px solid var(--border); background:var(--surface);">
+          <option value="date">Sort: Newest</option><option value="name">Sort: Name</option><option value="size">Sort: Size</option>
+        </select>
+        <button class="btn" onclick="openUploadModal(true)">⚡ Quick Upload</button>
+        <button class="btn btn-primary" onclick="openUploadModal()">＋ Upload File</button>
+      </div>
+    </div>
+    <div class="breadcrumb">${crumbs}</div>
+    ${body}
+    ${(subjectId && !category) ? '' : `
+      <div class="card card-pad">
+        ${sortedList.length ? sortedList.map(f=>fileRowHtml(f)).join('') : emptyState('📂','No study material here yet','Upload your first file to get started.', `<button class="btn btn-primary" onclick="openUploadModal()">+ Upload File</button>`)}
+      </div>
+    `}
+  `;
+}
+let fileSort='date';
+function sortFiles(v){ fileSort=v; renderContent(); } // simplified: applied at row-list build via param not required for demo depth
+
+function fileRowHtml(f, compact){
+  const subj = subjectById(f.subjectId);
+  return `
+    <div class="file-row" onclick="openFilePreview('${f.id}')">
+      <div class="file-ico">${iconFor(f.type)}</div>
+      <div class="file-meta">
+        <div class="file-name">${escapeHtml(f.name)}</div>
+        <div class="file-sub">${subj?escapeHtml(subj.name)+' · ':''}${f.category||''} ${compact?'':'· '+fmtSize(f.size)+' · '+fmtDate(f.uploadedAt)}</div>
+        ${!compact && f.tags && f.tags.length ? `<div class="task-tags">${f.tags.map(t=>`<span class="tag-pill">${escapeHtml(t)}</span>`).join('')}</div>` : ''}
+      </div>
+      ${f.isFavorite? '<span style="color:var(--warn)">⭐</span>' : ''}
+      <div class="file-actions" onclick="event.stopPropagation()">
+        <button class="icon-btn" style="width:28px;height:28px;" title="Favorite" onclick="toggleFavorite('${f.id}')">${f.isFavorite?'★':'☆'}</button>
+        <button class="icon-btn" style="width:28px;height:28px;" title="More" onclick="openFileMenu(this,'${f.id}')">⋯</button>
+      </div>
+    </div>`;
+}
+function openFileMenu(btn,id){
+  closeAllDropdowns();
+  const dd=document.createElement('div'); dd.className='dropdown'; dd.style.position='fixed';
+  const r=btn.getBoundingClientRect(); dd.style.top=(r.bottom+4)+'px'; dd.style.right=(window.innerWidth-r.right)+'px';
+  dd.innerHTML=`
+    <button onclick="openFilePreview('${id}')">👁️ Preview</button>
+    <button onclick="downloadFile('${id}')">⬇️ Download</button>
+    <button onclick="renameFile('${id}')">✏️ Rename</button>
+    <button onclick="openMoveFileModal('${id}')">📁 Move</button>
+    <button onclick="editFileMeta('${id}')">🏷️ Edit tags & info</button>
+    <button style="color:var(--danger)" onclick="deleteFile('${id}')">🗑️ Delete</button>`;
+  document.body.appendChild(dd);
+}
+function toggleFavorite(id){ const f=DB.files.find(x=>x.id===id); f.isFavorite=!f.isFavorite; save(); renderContent(); }
+function downloadFile(id){
+  const f=DB.files.find(x=>x.id===id);
+  if(f.dataUrl){ const a=document.createElement('a'); a.href=f.dataUrl; a.download=f.name; a.click(); }
+  else toast('Original bytes aren\'t stored in this demo — connect real cloud storage (see backend) to enable downloads.','error');
+}
+function renameFile(id){ const f=DB.files.find(x=>x.id===id); const n=prompt('Rename file', f.name); if(n){ f.name=n; save(); renderContent(); toast('File renamed'); } }
+function deleteFile(id){ if(!confirm('Delete this file? This cannot be undone.')) return; DB.files = DB.files.filter(f=>f.id!==id); save(); renderContent(); toast('File deleted'); }
+function openMoveFileModal(id){
+  const f = DB.files.find(x=>x.id===id);
+  openModal('Move File', `
+    <div class="field"><label>Subject</label><select id="mvSubj">${DB.subjects.map(s=>`<option value="${s.id}" ${s.id===f.subjectId?'selected':''}>${escapeHtml(s.name)}</option>`).join('')}</select></div>
+    <div class="field"><label>Category</label><select id="mvCat"></select></div>
+  `, [{label:'Move', primary:true, onClick:()=>{
+    f.subjectId = document.getElementById('mvSubj').value;
+    f.category = document.getElementById('mvCat').value;
+    save(); closeModal(); renderContent(); toast('File moved');
+  }}]);
+  const populateCat = ()=>{ const s=subjectById(document.getElementById('mvSubj').value); document.getElementById('mvCat').innerHTML = s.categories.map(c=>`<option ${c===f.category?'selected':''}>${escapeHtml(c)}</option>`).join(''); };
+  document.getElementById('mvSubj').addEventListener('change', populateCat); populateCat();
+}
+function editFileMeta(id){
+  const f = DB.files.find(x=>x.id===id);
+  openModal('Edit File Info', `
+    <div class="field"><label>Description</label><textarea id="mDesc">${escapeHtml(f.description||'')}</textarea></div>
+    <div class="field-row">
+      <div class="field"><label>Teacher</label><input type="text" id="mTeacher" value="${escapeHtml(f.teacher||'')}"></div>
+      <div class="field"><label>Unit / Chapter</label><input type="text" id="mUnit" value="${escapeHtml(f.unit||'')}"></div>
+    </div>
+    <div class="field"><label>Deadline (optional)</label><input type="date" id="mDeadline" value="${f.deadline||''}"></div>
+    <div class="field"><label>Tags (comma separated)</label><input type="text" id="mTags" value="${(f.tags||[]).join(', ')}"></div>
+  `, [{label:'Save', primary:true, onClick:()=>{
+    f.description = document.getElementById('mDesc').value;
+    f.teacher = document.getElementById('mTeacher').value;
+    f.unit = document.getElementById('mUnit').value;
+    f.deadline = document.getElementById('mDeadline').value;
+    f.tags = document.getElementById('mTags').value.split(',').map(t=>t.trim()).filter(Boolean).map(t=>t.startsWith('#')?t:'#'+t);
+    save(); closeModal(); renderContent(); toast('File updated');
+  }}]);
+}
+function openFilePreview(id){
+  const f = DB.files.find(x=>x.id===id);
+  f.lastOpenedAt = nowISO(); save();
+  const subj = subjectById(f.subjectId);
+  let previewHtml = '';
+  if(f.dataUrl && ['png','jpg','jpeg','webp'].includes(f.type)){
+    previewHtml = `<img src="${f.dataUrl}" style="width:100%; border-radius:8px; border:1px solid var(--border);">`;
+  } else if(f.dataUrl && f.type==='pdf'){
+    previewHtml = `<embed src="${f.dataUrl}" type="application/pdf" style="width:100%; height:420px; border-radius:8px; border:1px solid var(--border);">`;
+  } else {
+    previewHtml = `<div class="card card-pad" style="text-align:center; padding:36px;">
+      <div style="font-size:40px;">${iconFor(f.type)}</div>
+      <div style="margin-top:8px; font-weight:700;">${escapeHtml(f.name)}</div>
+      <div class="text-muted" style="margin-top:4px;">${f.type.toUpperCase()} · ${fmtSize(f.size)} · Uploaded ${fmtDate(f.uploadedAt)}</div>
+      <div class="text-muted" style="margin-top:10px; font-size:12px;">In-app preview isn't available for this file in the demo. Production storage would stream this via a signed URL.</div>
+      <button class="btn mt24" onclick="downloadFile('${f.id}')">⬇️ Download</button>
+    </div>`;
+  }
+  openModal(f.name, `
+    ${previewHtml}
+    <div class="mt24 grid grid-2">
+      <div><b style="font-size:12px; color:var(--text-muted);">SUBJECT</b><div>${subj?escapeHtml(subj.name):'—'}</div></div>
+      <div><b style="font-size:12px; color:var(--text-muted);">CATEGORY</b><div>${f.category||'—'}</div></div>
+      <div><b style="font-size:12px; color:var(--text-muted);">TEACHER</b><div>${f.teacher||'—'}</div></div>
+      <div><b style="font-size:12px; color:var(--text-muted);">UNIT</b><div>${f.unit||'—'}</div></div>
+      <div><b style="font-size:12px; color:var(--text-muted);">SIZE</b><div>${fmtSize(f.size)}</div></div>
+      <div><b style="font-size:12px; color:var(--text-muted);">UPLOADED</b><div>${fmtDate(f.uploadedAt)}</div></div>
+    </div>
+    ${f.description? `<div class="mt24"><b style="font-size:12px; color:var(--text-muted);">DESCRIPTION</b><div>${escapeHtml(f.description)}</div></div>`:''}
+    ${(f.tags&&f.tags.length)? `<div class="task-tags mt24">${f.tags.map(t=>`<span class="tag-pill">${escapeHtml(t)}</span>`).join('')}</div>`:''}
+  `, [
+    {label: f.isFavorite? '★ Unfavorite':'☆ Favorite', onClick:()=>{toggleFavorite(f.id); closeModal();}},
+    {label:'Edit info', onClick:()=>{closeModal(); editFileMeta(f.id);}},
+    {label:'Download', primary:true, onClick:()=>downloadFile(f.id)}
+  ], true);
+}
+
+/* ---- Upload flow (multi-step) ---- */
+function openUploadModal(quick){
+  uploadStep = quick ? 'quick' : 1;
+  uploadDraft = { files:[], yearId: DB.ui.currentYearId, semesterId: DB.ui.currentSemesterId, subjectId:null, category:null, tags:[], teacher:'', description:'', unit:'', deadline:'' };
+  renderUploadModal();
+}
+function renderUploadModal(){
+  if(DB.years.length===0){ toast('Create an academic year and subject first','error'); return; }
+  let body, footer;
+  if(uploadStep==='quick'){
+    body = `
+      <div class="dropzone" id="dz" onclick="document.getElementById('fileInput').click()">
+        📤 Drag & drop files here, or click to browse<br><span style="font-size:11px;">Files will be saved to Inbox — organize them anytime later from Files.</span>
+      </div>
+      <input type="file" id="fileInput" multiple style="display:none" onchange="handleFilePick(this.files)">
+      <div id="fileListPreview" class="mt24"></div>
+    `;
+    footer = [{label:'Save to Inbox', primary:true, onClick:()=>finishQuickUpload()}];
+  } else if(uploadStep===1){
+    body = `
+      <div class="step-indicator"><div class="done"></div><div></div><div></div></div>
+      <div class="dropzone" id="dz" ondragover="event.preventDefault();this.classList.add('drag')" ondragleave="this.classList.remove('drag')" ondrop="handleDrop(event)" onclick="document.getElementById('fileInput').click()">
+        📤 Drag & drop files here, or click to browse
+      </div>
+      <input type="file" id="fileInput" multiple style="display:none" onchange="handleFilePick(this.files)">
+      <div id="fileListPreview" class="mt24"></div>
+    `;
+    footer = [{label:'Next →', primary:true, onClick:()=>{ if(uploadDraft.files.length===0){toast('Select at least one file','error');return;} uploadStep=2; renderUploadModal(); }}];
+  } else if(uploadStep===2){
+    const sems = uploadDraft.yearId? semestersForYear(uploadDraft.yearId):[];
+    const subs = uploadDraft.semesterId? subjectsForSemester(uploadDraft.semesterId):[];
+    body = `
+      <div class="step-indicator"><div class="done"></div><div class="done"></div><div></div></div>
+      <div class="field"><label>Academic Year</label><select id="upYear" onchange="uploadDraft.yearId=this.value; uploadDraft.semesterId=null; renderUploadModal();">
+        ${DB.years.map(y=>`<option value="${y.id}" ${y.id===uploadDraft.yearId?'selected':''}>${escapeHtml(y.name)}</option>`).join('')}</select></div>
+      <div class="field"><label>Semester</label><select id="upSem" onchange="uploadDraft.semesterId=this.value; uploadDraft.subjectId=null; renderUploadModal();">
+        <option value="">Select…</option>${sems.map(s=>`<option value="${s.id}" ${s.id===uploadDraft.semesterId?'selected':''}>${escapeHtml(s.name)}</option>`).join('')}</select></div>
+      <div class="field"><label>Subject</label><select id="upSubj" onchange="uploadDraft.subjectId=this.value; uploadDraft.category=null; renderUploadModal();">
+        <option value="">Select…</option>${subs.map(s=>`<option value="${s.id}" ${s.id===uploadDraft.subjectId?'selected':''}>${escapeHtml(s.name)}</option>`).join('')}</select></div>
+      ${uploadDraft.subjectId? `<div class="field"><label>Category</label><div class="pill-select">${subjectById(uploadDraft.subjectId).categories.map(c=>`<div class="pill-opt ${uploadDraft.category===c?'selected':''}" onclick="uploadDraft.category='${c}';renderUploadModal();">${escapeHtml(c)}</div>`).join('')}</div></div>`:''}
+    `;
+    footer = [{label:'← Back', onClick:()=>{uploadStep=1;renderUploadModal();}}, {label:'Next →', primary:true, onClick:()=>{
+      if(!uploadDraft.subjectId||!uploadDraft.category){ toast('Choose subject and category','error'); return; }
+      uploadStep=3; renderUploadModal();
+    }}];
+  } else if(uploadStep===3){
+    body = `
+      <div class="step-indicator"><div class="done"></div><div class="done"></div><div class="done"></div></div>
+      <div class="field"><label>Tags (comma separated)</label><input type="text" id="upTags" placeholder="#unit1, #important"></div>
+      <div class="field-row">
+        <div class="field"><label>Teacher</label><input type="text" id="upTeacher" placeholder="e.g. Dr. Rao"></div>
+        <div class="field"><label>Unit / Chapter</label><input type="text" id="upUnit" placeholder="e.g. Unit 2"></div>
+      </div>
+      <div class="field"><label>Deadline (optional)</label><input type="date" id="upDeadline"></div>
+      <div class="field"><label>Notes / description</label><textarea id="upDesc" placeholder="Optional notes"></textarea></div>
+      <div class="text-muted" style="font-size:12px;">Uploading ${uploadDraft.files.length} file(s) to ${escapeHtml(subjectById(uploadDraft.subjectId).name)} → ${escapeHtml(uploadDraft.category)}</div>
+    `;
+    footer = [{label:'← Back', onClick:()=>{uploadStep=2;renderUploadModal();}}, {label:'Upload', primary:true, onClick:()=>finishUpload()}];
+  }
+  openModal(uploadStep==='quick'?'Quick Upload':'Upload File', body, footer, false, true);
+  if(uploadDraft.files.length) renderFileListPreview();
+}
+let pendingFileObjs = [];
+function handleDrop(e){ e.preventDefault(); e.currentTarget.classList.remove('drag'); handleFilePick(e.dataTransfer.files); }
+function handleFilePick(fileList){
+  pendingFileObjs = Array.from(fileList);
+  uploadDraft.files = pendingFileObjs.map(f=>({name:f.name, size:f.size, type:extOf(f.name)}));
+  renderFileListPreview();
+  pendingFileObjs.forEach((fileObj, idx)=>{
+    if(fileObj.size < 800000 && (fileObj.type.startsWith('image/') || fileObj.type==='application/pdf')){
+      const reader = new FileReader();
+      reader.onload = ()=>{ uploadDraft.files[idx].dataUrl = reader.result; };
+      reader.readAsDataURL(fileObj);
+    }
+  });
+}
+function renderFileListPreview(){
+  const el = document.getElementById('fileListPreview');
+  if(!el) return;
+  el.innerHTML = uploadDraft.files.map((f,i)=>`
+    <div class="flex-between" style="padding:8px 0; border-bottom:1px solid var(--border);">
+      <div style="display:flex; gap:8px; align-items:center; min-width:0;"><span>${iconFor(f.type)}</span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(f.name)}</span></div>
+      <div style="display:flex; align-items:center; gap:8px;"><span class="text-muted" style="font-size:12px;">${fmtSize(f.size)}</span><span style="color:var(--ok);font-size:12px;">✓ ready</span><button class="btn btn-sm btn-ghost" onclick="removeUploadFile(${i})">✕</button></div>
+    </div>`).join('');
+}
+function removeUploadFile(i){ uploadDraft.files.splice(i,1); renderFileListPreview(); }
+function finishUpload(){
+  const tags = document.getElementById('upTags').value.split(',').map(t=>t.trim()).filter(Boolean).map(t=>t.startsWith('#')?t:'#'+t);
+  const teacher = document.getElementById('upTeacher').value;
+  const unit = document.getElementById('upUnit').value;
+  const deadline = document.getElementById('upDeadline').value;
+  const description = document.getElementById('upDesc').value;
+  uploadDraft.files.forEach(f=>{
+    DB.files.push({id:uid(), subjectId:uploadDraft.subjectId, category:uploadDraft.category, name:f.name, type:f.type, size:f.size,
+      uploadedAt:nowISO(), lastOpenedAt:null, isFavorite:false, tags, teacher, description, unit, deadline, dataUrl:f.dataUrl||null});
+  });
+  save(); closeModal(); go('files'); toast(`${uploadDraft.files.length} file(s) uploaded`);
+}
+function finishQuickUpload(){
+  if(uploadDraft.files.length===0){ toast('Select at least one file','error'); return; }
+  // Inbox = ensure a catch-all subject exists
+  let inboxSubj = DB.subjects.find(s=>s.name==='Inbox');
+  if(!inboxSubj){
+    let sem = DB.semesters[0];
+    if(!sem){ toast('Create a semester first','error'); return; }
+    inboxSubj = {id:uid(), semesterId: sem.id, name:'Inbox', code:'', color:'#9CA3AF', categories:['Unsorted']};
+    DB.subjects.push(inboxSubj);
+  }
+  uploadDraft.files.forEach(f=>{
+    DB.files.push({id:uid(), subjectId:inboxSubj.id, category:'Unsorted', name:f.name, type:f.type, size:f.size,
+      uploadedAt:nowISO(), lastOpenedAt:null, isFavorite:false, tags:[], teacher:'', description:'', unit:'', deadline:'', dataUrl:f.dataUrl||null});
+  });
+  save(); closeModal(); go('files'); toast(`${uploadDraft.files.length} file(s) saved to Inbox — organize anytime`);
+}
+
+/* ================= TASKS ================= */
+function renderTasks(){
+  const tabs = [['today','Today'],['upcoming','Upcoming'],['overdue','Overdue'],['completed','Completed']];
+  let list = DB.tasks;
+  const today = todayStr();
+  if(taskTab==='today') list = list.filter(t=>t.dueDate===today && t.status!=='completed');
+  else if(taskTab==='upcoming') list = list.filter(t=>t.dueDate>today && t.status!=='completed');
+  else if(taskTab==='overdue') list = list.filter(t=>t.dueDate<today && t.status!=='completed');
+  else if(taskTab==='completed') list = list.filter(t=>t.status==='completed');
+  list = [...list].sort((a,b)=>a.dueDate.localeCompare(b.dueDate));
+  return `
+    <div class="flex-between mb16"><h2>Tasks</h2><button class="btn btn-primary" onclick="openTaskModal()">＋ Add Task</button></div>
+    <div class="tabs">${tabs.map(([k,l])=>`<button class="tab ${taskTab===k?'active':''}" onclick="taskTab='${k}';renderContent();">${l}</button>`).join('')}</div>
+    ${list.length? list.map(t=>taskRowHtml(t,true)).join('') : emptyState('✅', taskTab==='completed'?'No completed tasks yet':'You\'re all caught up! 🎉', taskTab==='overdue'?'Nothing overdue — nice work staying on top of things.':'Add a task to get started.')}
+  `;
+}
+function taskRowHtml(t, detailed){
+  const subj = subjectById(t.subjectId);
+  const prColor = t.priority==='high'?'var(--danger)':t.priority==='medium'?'var(--warn)':'var(--ok)';
+  const done = t.status==='completed';
+  const overdue = !done && t.dueDate && t.dueDate<todayStr();
+  return `
+    <div class="task-row">
+      <div class="checkbox ${done?'checked':''}" onclick="toggleTaskDone('${t.id}')">${done?'✓':''}</div>
+      <div style="flex:1; min-width:0;">
+        <div class="flex-between">
+          <span class="task-title ${done?'done':''}">${escapeHtml(t.title)}</span>
+          <div style="display:flex; gap:6px; align-items:center;">
+            ${detailed? `<button class="icon-btn" style="width:26px;height:26px;" onclick="openTaskModal('${t.id}')">✏️</button><button class="icon-btn" style="width:26px;height:26px;" onclick="deleteTask('${t.id}')">🗑️</button>` : ''}
+          </div>
+        </div>
+        <div class="task-tags">
+          <span class="dot" style="background:${prColor}"></span><span class="text-muted" style="font-size:12px; text-transform:capitalize;">${t.priority}</span>
+          ${subj?`<span class="tag-pill">${escapeHtml(subj.name)}</span>`:''}
+          ${t.dueDate? `<span class="badge ${overdue?'badge-danger':'badge-neutral'}">${overdue?'Overdue · ':''}${fmtDate(t.dueDate)}${t.dueTime?' · '+t.dueTime:''}</span>`:''}
+          ${t.status==='in_progress'? `<span class="badge badge-accent">In progress</span>`:''}
+          ${t.recurring && t.recurring!=='none'? `<span class="badge badge-neutral">🔁 ${t.recurring}</span>`:''}
+        </div>
+      </div>
+    </div>`;
+}
+function toggleTaskDone(id){
+  const t = DB.tasks.find(x=>x.id===id);
+  if(t.status==='completed'){ t.status='todo'; t.completedAt=null; }
+  else { t.status='completed'; t.completedAt=nowISO(); }
+  save(); renderContent();
+}
+function deleteTask(id){ if(!confirm('Delete this task?')) return; DB.tasks = DB.tasks.filter(t=>t.id!==id); save(); renderContent(); }
+function openTaskModal(taskId){
+  const t = taskId ? DB.tasks.find(x=>x.id===taskId) : {title:'',description:'',subjectId:DB.subjects[0]?.id||'',priority:'medium',status:'todo',dueDate:todayStr(),dueTime:'',reminderMinutes:0,recurring:'none'};
+  openModal(taskId?'Edit Task':'Add Task', `
+    <div class="field"><label>Title</label><input type="text" id="tTitle" value="${escapeHtml(t.title)}" placeholder="e.g. Complete Mathematics Assignment"></div>
+    <div class="field"><label>Description</label><textarea id="tDesc">${escapeHtml(t.description||'')}</textarea></div>
+    <div class="field-row">
+      <div class="field"><label>Subject</label><select id="tSubj">${DB.subjects.map(s=>`<option value="${s.id}" ${s.id===t.subjectId?'selected':''}>${escapeHtml(s.name)}</option>`).join('')}</select></div>
+      <div class="field"><label>Priority</label><select id="tPriority">${['low','medium','high'].map(p=>`<option value="${p}" ${p===t.priority?'selected':''}>${p[0].toUpperCase()+p.slice(1)}</option>`).join('')}</select></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Due date</label><input type="date" id="tDate" value="${t.dueDate||''}"></div>
+      <div class="field"><label>Due time</label><input type="time" id="tTime" value="${t.dueTime||''}"></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Status</label><select id="tStatus">${[['todo','To Do'],['in_progress','In Progress'],['completed','Completed']].map(([v,l])=>`<option value="${v}" ${v===t.status?'selected':''}>${l}</option>`).join('')}</select></div>
+      <div class="field"><label>Reminder</label><select id="tReminder">${[[0,'None'],[10,'10 min before'],[30,'30 min before'],[60,'1 hour before'],[1440,'1 day before']].map(([v,l])=>`<option value="${v}" ${v==t.reminderMinutes?'selected':''}>${l}</option>`).join('')}</select></div>
+    </div>
+    <div class="field"><label>Recurring</label><select id="tRecurring">${[['none','None'],['daily','Daily'],['weekly','Weekly']].map(([v,l])=>`<option value="${v}" ${v===t.recurring?'selected':''}>${l}</option>`).join('')}</select></div>
+  `, [{label:taskId?'Save':'Create', primary:true, onClick:()=>{
+    const data = {
+      title: document.getElementById('tTitle').value.trim(),
+      description: document.getElementById('tDesc').value,
+      subjectId: document.getElementById('tSubj').value,
+      priority: document.getElementById('tPriority').value,
+      dueDate: document.getElementById('tDate').value,
+      dueTime: document.getElementById('tTime').value,
+      status: document.getElementById('tStatus').value,
+      reminderMinutes: +document.getElementById('tReminder').value,
+      recurring: document.getElementById('tRecurring').value,
+    };
+    if(!data.title){ toast('Title is required','error'); return; }
+    if(taskId){ Object.assign(t, data); }
+    else { DB.tasks.push({id:uid(), ...data, createdAt:nowISO(), completedAt: data.status==='completed'?nowISO():null}); }
+    save(); closeModal(); go('tasks'); toast(taskId?'Task updated':'Task created');
+  }}]);
+}
+
+/* ================= DEADLINES ================= */
+let deadlineView = 'list';
+function renderDeadlines(){
+  return `
+    <div class="flex-between mb16"><h2>Deadlines</h2>
+      <div style="display:flex; gap:8px;">
+        <button class="btn ${deadlineView==='list'?'btn-primary':''}" onclick="deadlineView='list';renderContent();">List</button>
+        <button class="btn ${deadlineView==='calendar'?'btn-primary':''}" onclick="deadlineView='calendar';renderContent();">Calendar</button>
+        <button class="btn btn-primary" onclick="openDeadlineModal()">＋ Add Deadline</button>
+      </div>
+    </div>
+    ${deadlineView==='list' ? renderDeadlineList() : renderDeadlineCalendar()}
+  `;
+}
+function renderDeadlineList(){
+  const sorted = [...DB.deadlines].sort((a,b)=>a.date.localeCompare(b.date));
+  if(!sorted.length) return emptyState('⏰','No deadlines yet','Track exams, submissions and project due dates here.', `<button class="btn btn-primary" onclick="openDeadlineModal()">+ Add Deadline</button>`);
+  return `<div class="card card-pad">${sorted.map(d=>{
+    const du = daysUntil(d.date);
+    const status = d.completed? {l:'Completed', c:'badge-ok'} : du<0? {l:'Overdue', c:'badge-danger'} : du===0? {l:'Due today', c:'badge-warn'} : {l:fmtDate(d.date), c:'badge-neutral'};
+    return `<div class="flex-between" style="padding:11px 0; border-bottom:1px solid var(--border);">
+      <div style="display:flex; gap:10px; align-items:center;">
+        <div class="checkbox ${d.completed?'checked':''}" onclick="toggleDeadline('${d.id}')">${d.completed?'✓':''}</div>
+        <div><b style="font-size:13.5px;">${escapeHtml(d.title)}</b><div class="subtitle">${d.type} · ${subjectById(d.subjectId)?.name||'—'} ${d.time?'· '+d.time:''}</div></div>
+      </div>
+      <div style="display:flex; align-items:center; gap:8px;"><span class="badge ${status.c}">${status.l}</span>
+      <button class="icon-btn" style="width:26px;height:26px;" onclick="deleteDeadline('${d.id}')">🗑️</button></div>
+    </div>`;
+  }).join('')}</div>`;
+}
+function renderDeadlineCalendar(){
+  const now = new Date(); now.setMonth(now.getMonth()+calMonthOffset);
+  const year = now.getFullYear(), month = now.getMonth();
+  const firstDay = new Date(year,month,1).getDay();
+  const daysInMonth = new Date(year,month+1,0).getDate();
+  const monthName = now.toLocaleString(undefined,{month:'long', year:'numeric'});
+  let cells = [];
+  for(let i=0;i<firstDay;i++) cells.push(null);
+  for(let d=1; d<=daysInMonth; d++) cells.push(d);
+  const dateStr = (d)=> `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+  return `
+    <div class="flex-between mb16">
+      <button class="btn btn-sm" onclick="calMonthOffset--;renderContent();">← Prev</button>
+      <b>${monthName}</b>
+      <button class="btn btn-sm" onclick="calMonthOffset++;renderContent();">Next →</button>
+    </div>
+    <div class="cal-dowrow">${['S','M','T','W','T','F','S'].map(d=>`<div>${d}</div>`).join('')}</div>
+    <div class="calendar-grid">
+      ${cells.map(d=>{
+        if(!d) return `<div></div>`;
+        const ds = dateStr(d);
+        const items = DB.deadlines.filter(x=>x.date===ds);
+        const isToday = ds===todayStr();
+        return `<div class="cal-day ${isToday?'today':''}" onclick="showDayDeadlines('${ds}')">
+          <div class="num">${d}</div>
+          <div class="dots">${items.slice(0,4).map(it=>`<span class="dot" style="background:${it.completed?'var(--ok)':'var(--accent)'}"></span>`).join('')}</div>
+        </div>`;
+      }).join('')}
+    </div>`;
+}
+function showDayDeadlines(ds){
+  const items = DB.deadlines.filter(d=>d.date===ds);
+  openModal(fmtDate(ds), items.length? items.map(d=>`<div style="padding:8px 0; border-bottom:1px solid var(--border);"><b>${escapeHtml(d.title)}</b><div class="subtitle">${d.type} · ${d.time||''}</div></div>`).join('') : `<div class="text-muted">No deadlines this day.</div>`, [{label:'+ Add Deadline', primary:true, onClick:()=>{closeModal(); openDeadlineModal(ds);}}]);
+}
+function toggleDeadline(id){ const d=DB.deadlines.find(x=>x.id===id); d.completed=!d.completed; save(); renderContent(); }
+function deleteDeadline(id){ if(!confirm('Delete this deadline?')) return; DB.deadlines=DB.deadlines.filter(d=>d.id!==id); save(); renderContent(); }
+function openDeadlineModal(presetDate){
+  openModal('Add Deadline', `
+    <div class="field"><label>Title</label><input type="text" id="dTitle" placeholder="e.g. DBMS Mid-Sem Exam"></div>
+    <div class="field-row">
+      <div class="field"><label>Type</label><select id="dType">${['Assignment','Project','Exam','Quiz','Lab','Presentation','Other'].map(t=>`<option>${t}</option>`).join('')}</select></div>
+      <div class="field"><label>Subject</label><select id="dSubj">${DB.subjects.map(s=>`<option value="${s.id}">${escapeHtml(s.name)}</option>`).join('')}</select></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Date</label><input type="date" id="dDate" value="${presetDate||todayStr()}"></div>
+      <div class="field"><label>Time</label><input type="time" id="dTime" value="23:59"></div>
+    </div>
+    <div class="field"><label>Notes</label><textarea id="dDesc"></textarea></div>
+  `, [{label:'Create', primary:true, onClick:()=>{
+    const title = document.getElementById('dTitle').value.trim();
+    if(!title){ toast('Title is required','error'); return; }
+    DB.deadlines.push({id:uid(), title, type:document.getElementById('dType').value, subjectId:document.getElementById('dSubj').value,
+      date:document.getElementById('dDate').value, time:document.getElementById('dTime').value, description:document.getElementById('dDesc').value, completed:false});
+    save(); closeModal(); go('deadlines'); toast('Deadline added');
+  }}]);
+}
+
+/* ================= FAVORITES ================= */
+function renderFavorites(){
+  const favs = DB.files.filter(f=>f.isFavorite);
+  return `<h2 class="mb16">Favorites</h2>${favs.length? `<div class="card card-pad">${favs.map(f=>fileRowHtml(f)).join('')}</div>` : emptyState('⭐','No favorites yet','Star important notes, syllabi and exam material to find them instantly.')}`;
+}
+
+/* ================= FOCUS MODE ================= */
+function renderFocus(){
+  const sessions = DB.focusSessions.filter(s=>s.completed);
+  const totalMins = sessions.reduce((a,s)=>a+s.duration,0);
+  return `
+    <div class="focus-shell" id="focusShell">
+      ${focusState.running ? `
+        <div class="text-muted">${escapeHtml(focusState.label)}</div>
+        <div class="focus-timer" id="timerDisplay">25:00</div>
+        <div style="display:flex; gap:10px;">
+          <button class="btn" onclick="pauseFocus()">${focusState.paused?'▶ Resume':'⏸ Pause'}</button>
+          <button class="btn btn-danger" onclick="endFocus()">■ End Session</button>
+        </div>
+        <div class="text-muted mt24" style="font-size:12px;">${sessions.length} sessions completed · ${Math.round(totalMins/60*10)/10}h focused total</div>
+      ` : `
+        <h2>Focus Mode</h2>
+        <div class="subtitle mb16">Pick a subject and duration, then start a distraction-free session.</div>
+        <div class="field" style="width:280px;"><label>Subject / Task</label>
+          <select id="focusSubj" style="width:100%; padding:8px; border-radius:6px; border:1px solid var(--border); background:var(--surface);">
+            <option value="">Free study</option>
+            ${DB.subjects.map(s=>`<option value="${s.id}">${escapeHtml(s.name)}</option>`).join('')}
+          </select>
+        </div>
+        <div class="preset-row">
+          ${[25,45,60].map(m=>`<button class="btn" onclick="setFocusPreset(${m})" id="preset-${m}">${m} min</button>`)}
+          <input type="number" id="customMin" placeholder="Custom" style="width:80px; padding:8px; border-radius:6px; border:1px solid var(--border); background:var(--surface);">
+        </div>
+        <button class="btn btn-primary mt24" style="padding:12px 28px;" onclick="startFocus()">▶ Start Focus</button>
+        <div class="grid grid-3 mt24" style="width:100%; max-width:480px;">
+          <div class="card card-pad" style="text-align:center;"><div class="stat-num">${sessions.length}</div><div class="stat-label">Sessions</div></div>
+          <div class="card card-pad" style="text-align:center;"><div class="stat-num">${Math.round(totalMins/60*10)/10}h</div><div class="stat-label">Focus time</div></div>
+          <div class="card card-pad" style="text-align:center;"><div class="stat-num">${sessions.filter(s=>new Date(s.completedAt).toDateString()===new Date().toDateString()).length}</div><div class="stat-label">Today</div></div>
+        </div>
+        <div class="text-muted mt24" style="font-size:11.5px; max-width:420px;">Focus Mode minimizes in-app UI and tracks sessions. This demo cannot block other apps or websites on your device — that would require a separate browser extension or OS-level integration, structured as a future add-on.</div>
+      `}
+    </div>`;
+}
+let selectedPreset = 25;
+function setFocusPreset(m){ selectedPreset = m; document.getElementById('customMin').value=''; }
+function startFocus(){
+  const custom = +document.getElementById('customMin').value;
+  const mins = custom>0 ? custom : selectedPreset;
+  const subjectId = document.getElementById('focusSubj').value || null;
+  focusState = { running:true, paused:false, remaining:mins*60, total:mins*60, subjectId, taskId:null, label: subjectId? subjectById(subjectId).name : 'Free study', timerId:null };
+  renderContent();
+  initFocusUI();
+}
+function initFocusUI(){
+  if(!focusState.running) return;
+  updateTimerDisplay();
+  clearInterval(focusState.timerId);
+  focusState.timerId = setInterval(()=>{
+    if(focusState.paused) return;
+    focusState.remaining--;
+    if(focusState.remaining<=0){ completeFocus(); return; }
+    updateTimerDisplay();
+  },1000);
+}
+function updateTimerDisplay(){
+  const el = document.getElementById('timerDisplay');
+  if(!el) return;
+  const m = Math.floor(focusState.remaining/60), s = focusState.remaining%60;
+  el.textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+}
+function pauseFocus(){ focusState.paused=!focusState.paused; renderContent(); initFocusUI(); }
+function completeFocus(){
+  clearInterval(focusState.timerId);
+  DB.focusSessions.push({id:uid(), subjectId:focusState.subjectId, duration:Math.round(focusState.total/60), startedAt:nowISO(), completedAt:nowISO(), completed:true});
+  save();
+  toast('Focus session complete! 🎉');
+  if('Notification' in window && Notification.permission==='granted'){ new Notification('Focus session complete', {body:'Nice work — take a short break.'}); }
+  focusState.running=false;
+  renderContent();
+}
+function endFocus(){
+  clearInterval(focusState.timerId);
+  const elapsed = Math.round((focusState.total-focusState.remaining)/60);
+  if(elapsed>0){ DB.focusSessions.push({id:uid(), subjectId:focusState.subjectId, duration:elapsed, startedAt:nowISO(), completedAt:nowISO(), completed:true}); save(); }
+  focusState.running=false;
+  renderContent();
+  toast('Session ended');
+}
+
+/* ================= STATISTICS ================= */
+function renderStats(){
+  const tasksCompleted = DB.tasks.filter(t=>t.status==='completed').length;
+  const tasksPending = DB.tasks.filter(t=>t.status!=='completed').length;
+  const filesAdded = DB.files.length;
+  const sessions = DB.focusSessions.filter(s=>s.completed);
+  const focusMins = sessions.reduce((a,s)=>a+s.duration,0);
+  const upcomingDeadlines = DB.deadlines.filter(d=>!d.completed && d.date>=todayStr()).length;
+  const bySubject = DB.subjects.map(s=>({name:s.name, count:DB.files.filter(f=>f.subjectId===s.id).length})).sort((a,b)=>b.count-a.count);
+  const maxCount = Math.max(1,...bySubject.map(s=>s.count));
+  return `
+    <h2 class="mb16">Statistics</h2>
+    <div class="grid grid-4 mb16">
+      <div class="card card-pad"><div class="stat-num">${tasksCompleted}</div><div class="stat-label">Tasks completed</div></div>
+      <div class="card card-pad"><div class="stat-num">${tasksPending}</div><div class="stat-label">Tasks pending</div></div>
+      <div class="card card-pad"><div class="stat-num">${filesAdded}</div><div class="stat-label">Files added</div></div>
+      <div class="card card-pad"><div class="stat-num">${upcomingDeadlines}</div><div class="stat-label">Upcoming deadlines</div></div>
+      <div class="card card-pad"><div class="stat-num">${sessions.length}</div><div class="stat-label">Focus sessions</div></div>
+      <div class="card card-pad"><div class="stat-num">${Math.round(focusMins/60*10)/10}h</div><div class="stat-label">Focus time</div></div>
+      <div class="card card-pad"><div class="stat-num">${DB.deadlines.filter(d=>d.completed).length}</div><div class="stat-label">Assignments completed</div></div>
+      <div class="card card-pad"><div class="stat-num">${DB.files.filter(f=>f.isFavorite).length}</div><div class="stat-label">Favorited files</div></div>
+    </div>
+    <div class="section-title">Files by subject</div>
+    <div class="card card-pad">
+      ${bySubject.length? bySubject.map(s=>`<div class="bar-row"><div class="lbl">${escapeHtml(s.name)}</div><div class="bar-track"><div class="bar-fill" style="width:${(s.count/maxCount)*100}%"></div></div><div class="bar-val">${s.count}</div></div>`).join('') : `<div class="text-muted">No subjects yet.</div>`}
+    </div>
+  `;
+}
+
+/* ================= SETTINGS ================= */
+function renderSettings(){
+  return `
+    <h2 class="mb16">Settings</h2>
+    <div class="card card-pad mb16">
+      <div class="section-title">Profile</div>
+      <div class="field"><label>Name</label><input type="text" id="setName" value="${escapeHtml(DB.user.name)}"></div>
+      <div class="field"><label>Email</label><input type="text" id="setEmail" value="${escapeHtml(DB.user.email)}"></div>
+      <button class="btn btn-primary" onclick="saveProfile()">Save Profile</button>
+    </div>
+    <div class="card card-pad mb16">
+      <div class="section-title">Appearance</div>
+      <div class="flex-between"><span>Theme</span><button class="btn" onclick="toggleTheme()">${DB.ui.theme==='light'?'Switch to Dark':'Switch to Light'}</button></div>
+    </div>
+    <div class="card card-pad mb16">
+      <div class="section-title">Notifications</div>
+      <div class="flex-between"><span>Browser reminders for tasks & deadlines</span><button class="btn" onclick="requestNotifPermission()">${('Notification' in window && Notification.permission==='granted')?'Enabled ✓':'Enable'}</button></div>
+    </div>
+    <div class="card card-pad">
+      <div class="section-title">Data</div>
+      <div class="text-muted" style="font-size:12.5px; margin-bottom:10px;">This demo stores your data securely and privately tied to your account. For real multi-device cloud storage and file hosting, deploy the production backend (schema + setup provided separately).</div>
+      <button class="btn btn-danger" onclick="resetDemoData()">Reset demo data</button>
+    </div>
+  `;
+}
+function saveProfile(){ DB.user.name=document.getElementById('setName').value||'Student'; DB.user.email=document.getElementById('setEmail').value; save(); render(); toast('Profile saved'); }
+function requestNotifPermission(){
+  if(!('Notification' in window)){ toast('Notifications not supported in this browser','error'); return; }
+  Notification.requestPermission().then(p=>{ if(p==='granted') toast('Notifications enabled'); renderContent(); });
+}
+function resetDemoData(){
+  if(!confirm('This will erase all your data and reload sample content. Continue?')) return;
+  DB = {user:{name:'Student', email:'you@studify.app'}, years:[], semesters:[], subjects:[], files:[], tasks:[], deadlines:[], focusSessions:[], ui:{currentYearId:null,currentSemesterId:null,theme:DB.ui.theme}};
+  seedDemoData(); save(); go('dashboard'); toast('Demo data reset');
+}
+
+/* ================= MODAL ================= */
+function openModal(title, bodyHtml, buttons=[], noHeader, wide){
+  document.querySelectorAll('.modal-overlay').forEach(m=>m.remove());
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.onclick = (e)=>{ if(e.target===overlay) closeModal(); };
+  overlay.innerHTML = `
+    <div class="modal ${wide?'modal-wide':''}">
+      <div class="modal-header"><h3>${escapeHtml(title)}</h3><button class="icon-btn" onclick="closeModal()">✕</button></div>
+      <div class="modal-body">${bodyHtml}</div>
+      ${buttons.length? `<div class="modal-footer">${buttons.map((b,i)=>`<button class="btn ${b.primary?'btn-primary':''}" id="modalBtn${i}">${b.label}</button>`).join('')}</div>` : ''}
+    </div>`;
+  document.body.appendChild(overlay);
+  buttons.forEach((b,i)=>{ document.getElementById('modalBtn'+i).onclick = b.onClick; });
+}
+function closeModal(){ document.querySelectorAll('.modal-overlay').forEach(m=>m.remove()); }
+window.onkeydown = (e)=>{ if(e.key==='Escape') closeModal(); };
+
+/* ================= REMINDER CHECK (lightweight) ================= */
+setInterval(()=>{
+  const now = new Date();
+  DB.tasks.forEach(t=>{
+    if(t.status==='completed' || !t.dueDate || !t.reminderMinutes || t.__reminded) return;
+    const due = new Date(t.dueDate+'T'+(t.dueTime||'23:59'));
+    const remindAt = new Date(due.getTime() - t.reminderMinutes*60000);
+    if(now>=remindAt && now<due){
+      t.__reminded = true;
+      toast(`Reminder: "${t.title}" is due ${t.dueTime?('at '+t.dueTime):'today'}`);
+      if('Notification' in window && Notification.permission==='granted'){ new Notification('Studify reminder', {body:`${t.title} is coming up`}); }
+    }
+  });
+}, 30000);
+
+/* ================= BOOT ================= */
+(async function boot(){
+  await load();
+  render();
+})();
+</script>
+</body>
+</html>
