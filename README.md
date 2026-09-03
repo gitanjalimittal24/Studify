@@ -34,6 +34,9 @@ The platform is designed to reduce the clutter caused by study materials being s
 ## 🛠️ Project
 
 **Project Name:** Studify
+
 **Developer:** Gitanjali Mittal
+
 **Course:** B.Tech CSE — Artificial Intelligence & Machine Learning
-**Year:** 1st Year
+
+**Year:** 1st Year, Semester - 1
